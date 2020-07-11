@@ -9,6 +9,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.MotionEvent;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -34,12 +35,15 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SnapshotMetadata;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.journeyapps.barcodescanner.CaptureActivity;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -49,17 +53,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     private FirebaseFirestore levigoDb = FirebaseFirestore.getInstance();
+
     private CollectionReference inventoryRef = levigoDb.collection("Inventory");
 
 
     private RecyclerView inventoryScroll ;
     private RecyclerView.Adapter iAdapter ;
     private RecyclerView.LayoutManager iLayoutManager ;
+
 //    private List<String> names = new LinkedList<>();
     private List<Map<String, Object>> entries = new LinkedList<>();
 
     private FloatingActionButton mAdd;
-
+    private float x1, x2, y1, y2;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,6 +91,27 @@ public class MainActivity extends AppCompatActivity {
         initInventory();
     }
 
+    public boolean onTouchEvent(MotionEvent touchEvent){
+        switch(touchEvent.getAction()){
+            case MotionEvent.ACTION_DOWN:
+                x1 = touchEvent.getX();
+                y1 = touchEvent.getY();
+                break;
+            case MotionEvent.ACTION_UP:
+                x2 = touchEvent.getX();
+                y2 = touchEvent.getY();
+                if(x1 < x2){
+                Intent i = new Intent(MainActivity.this, SwipeLeft.class);
+                startActivity(i);
+            }else if(x1 > x2){
+                Intent i = new Intent(MainActivity.this, SwipeRight.class);
+                startActivity(i);
+            }
+            break;
+        }
+        return false;
+    }
+
     private void startScanner() {
         IntentIntegrator integrator = new IntentIntegrator(this);
         integrator.setCaptureActivity(CaptureActivity.class);
@@ -105,25 +132,17 @@ public class MainActivity extends AppCompatActivity {
         inventoryScroll.setLayoutManager(iLayoutManager);
 //        iAdapter = new InventoryViewAdapter(names, inventoryRef);
         iAdapter = new InventoryViewAdapter(entries, inventoryRef);
-//        Log.d(TAG, "NAMES: " + names);
         inventoryScroll.setAdapter(iAdapter);
 
-        // TODO delete later
-//        Query q = levigoDb.collectionGroup("levigoapp-266c3");
-//        q.whereEqualTo("udi", "010100886333006052172204101011174028").
-//        Log.d(TAG, "Query: " + q);
-//        inventoryRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                if (task.isSuccessful()) {
-//                    for (QueryDocumentSnapshot document : task.getResult()) {
-//                        Log.d(TAG, document.getId() + " => " + document.getData());
-//                    }
-//                } else {
-//                    Log.d(TAG, "Error getting documents: ", task.getException());
-//                }
-//            }
-//        });
+        Log.d(TAG, "WHERE IS THIS SHIT: ");
+
+
+        Query alphabetical = inventoryRef.orderBy("name");
+        Query expiration = inventoryRef.orderBy("expiration");
+        Query dateAdded = inventoryRef.orderBy("current_date_time");
+        Query quantity = inventoryRef.orderBy("quantity");
+        Query reverse = inventoryRef.orderBy("name", Query.Direction.DESCENDING);
+
 
         inventoryRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -186,13 +205,13 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if(result != null){
+        if(result != null) {
             String contents = result.getContents();
-            if(contents != null) {
+            if (contents != null) {
                 startItemView(contents);
 
             }
-            if(result.getBarcodeImagePath() != null) {
+            if (result.getBarcodeImagePath() != null) {
                 Log.d(TAG, "" + result.getBarcodeImagePath());
 //                mImageView.setImageBitmap(BitmapFactory.decodeFile(result.getBarcodeImagePath()));
                 //maybe add image to firebase storage
