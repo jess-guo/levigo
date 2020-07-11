@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         getPermissions();
         initInventory();
     }
-
+/*
     public boolean onTouchEvent(MotionEvent touchEvent){
         switch(touchEvent.getAction()){
             case MotionEvent.ACTION_DOWN:
@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
+    */
 
     private void startScanner() {
         IntentIntegrator integrator = new IntentIntegrator(this);
@@ -134,15 +135,11 @@ public class MainActivity extends AppCompatActivity {
         iAdapter = new InventoryViewAdapter(entries, inventoryRef);
         inventoryScroll.setAdapter(iAdapter);
 
-        Log.d(TAG, "WHERE IS THIS SHIT: ");
-
-
         Query alphabetical = inventoryRef.orderBy("name");
         Query expiration = inventoryRef.orderBy("expiration");
         Query dateAdded = inventoryRef.orderBy("current_date_time");
         Query quantity = inventoryRef.orderBy("quantity");
         Query reverse = inventoryRef.orderBy("name", Query.Direction.DESCENDING);
-
 
         inventoryRef.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -281,7 +278,5 @@ public class MainActivity extends AppCompatActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-
-
 
 }
